@@ -1,23 +1,14 @@
-import logo from './logo.svg';
-import './App.css';
+import "./App.css";
+import useOnlineChecker from "./hooks/useOnlineChecker";
+import AlwaysOnDisplay from "./components/AlwaysOnDisplay";
 
 function App() {
+  const [isOnline] = useOnlineChecker();
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      {!isOnline && <h1 className="online-status">You are offline</h1>}
+      <AlwaysOnDisplay />
     </div>
   );
 }

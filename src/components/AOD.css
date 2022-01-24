@@ -1,0 +1,26 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1920px;
+  padding: 50px;
+}
+
+.btn-off,
+.btn-on {
+  padding: 15px 30px;
+  color: whitesmoke;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.25em;
+  transition: all 0.3s;
+}
+
+.btn-on {
+  background-color: rebeccapurple;
+}
+
+.btn-off {
+  background-color: orangered;
+}
