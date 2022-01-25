@@ -128,7 +128,7 @@ export default function AlwaysOnDisplay() {
             </button>
           )}
           <h5>{wakeLockMsg}</h5>
-          {wakeLockStatus && <p>AOD ON since {timeSpent}s</p>}
+          {wakeLockStatus && <p>AOD ON time {timeSpent}s</p>}
         </>
       ) : (
         <h4>{wakeSupportMessage}</h4>
