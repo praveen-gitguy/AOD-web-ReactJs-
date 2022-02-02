@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import CurrentTime from "./CurrentTime";
 import "./AOD.css";
+import AodOnTime from "./AodOnTime";
 
 const msgOn = "AOD is ON";
 const msgOff = "AOD is OFF";
@@ -12,26 +13,7 @@ export default function AlwaysOnDisplay() {
   const [wakeLockStatus, setWakeLockStatus] = useState(false);
   const [shouldReaquireWakeLock, setShouldReaquireWakeLock] = useState(false);
 
-  const startTimeRef = useRef(0);
-  const [timeSpent, setTimeSpent] = useState(0);
-
-  useEffect(() => {
-    let id;
-
-    if (wakeLockRef.current && wakeLockStatus) {
-      id = setInterval(() => {
-        setTimeSpent(((Date.now() - startTimeRef.current) / 1000).toFixed(0));
-      }, 1000);
-    }
-
-    return () => {
-      if (id) clearInterval(id);
-    };
-  }, [wakeLockStatus]);
-
-  const wakeSupportMessage = isSupported
-    ? "AOD is supported"
-    : "AOD is not supported";
+  const wakeSupportMessage = isSupported ? "" : "AOD is not supported";
 
   const handleWakeRequest = useCallback(async () => {
     if (!isSupported) return;
@@ -39,7 +21,6 @@ export default function AlwaysOnDisplay() {
       wakeLockRef.current = await window.navigator.wakeLock.request("screen");
       setWakeLockMsg(msgOn);
       setWakeLockStatus(true);
-      startTimeRef.current = Date.now();
     } catch (err) {
       setWakeLockMsg(`${err.name}, ${err.message}`);
       setWakeLockStatus(false);
@@ -50,8 +31,6 @@ export default function AlwaysOnDisplay() {
     if (wakeLockRef.current) {
       await wakeLockRef.current.release();
       wakeLockRef.current = null;
-      startTimeRef.current = 0;
-      setTimeSpent(0);
       setWakeLockMsg(msgOff);
       setWakeLockStatus(false);
     }
@@ -59,29 +38,31 @@ export default function AlwaysOnDisplay() {
 
   useEffect(() => {
     const reaquire = localStorage.getItem("aod");
-    if (reaquire === "true") setShouldReaquireWakeLock(true);
-    else setShouldReaquireWakeLock(false);
-  }, []);
+    if (reaquire === "true") {
+      setShouldReaquireWakeLock(true);
+      handleWakeRequest();
+    } else setShouldReaquireWakeLock(false);
+  }, [handleWakeRequest]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (
         document.visibilityState === "visible" &&
-        shouldReaquireWakeLock === true
+        localStorage.getItem("aod") === "true"
       )
         handleWakeRequest();
       else handleWakeRelease();
     };
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    handleVisibilityChange();
+    if (wakeLockRef.current)
+      wakeLockRef.current.onrelease = handleWakeRelease();
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [handleWakeRelease, handleWakeRequest, shouldReaquireWakeLock]);
+  }, [handleWakeRelease, handleWakeRequest]);
 
   useEffect(() => {
     if ("wakeLock" in navigator) setIsSupported(true);
@@ -104,7 +85,9 @@ export default function AlwaysOnDisplay() {
     <div className="container">
       <CurrentTime />
 
-      {isSupported ? (
+      {!isSupported && <h4>{wakeSupportMessage}</h4>}
+
+      {isSupported && (
         <>
           <div style={{ fontWeight: "bold", padding: "20px 0px" }}>
             <label htmlFor="require-wake">
@@ -128,10 +111,8 @@ export default function AlwaysOnDisplay() {
             </button>
           )}
           <h5>{wakeLockMsg}</h5>
-          {wakeLockStatus && <p>AOD ON time {timeSpent}s</p>}
+          {wakeLockStatus && <AodOnTime />}
         </>
-      ) : (
-        <h4>{wakeSupportMessage}</h4>
       )}
     </div>
   );
